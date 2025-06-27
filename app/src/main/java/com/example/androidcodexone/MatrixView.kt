@@ -15,8 +15,10 @@ class MatrixView @JvmOverloads constructor(
 ) : View(context, attrs) {
 
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-        color = Color.GREEN
-        textSize = 10f * resources.displayMetrics.density
+
+        color = Color.RED
+        textSize = 32f * resources.displayMetrics.density
+
         typeface = Typeface.MONOSPACE
     }
 
