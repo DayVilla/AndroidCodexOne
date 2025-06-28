@@ -5,7 +5,9 @@ import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
 import android.graphics.Typeface
+import android.os.SystemClock
 import android.util.AttributeSet
+import android.view.Choreographer
 import android.view.View
 import kotlin.random.Random
 
@@ -25,8 +27,9 @@ class MatrixView @JvmOverloads constructor(
     private data class Column(
         var x: Float,
         var y: Float,
-        var speed: Float,
-        var length: Int
+        var speed: Float, // pixels per second
+        var length: Int,
+        var chars: CharArray
     )
 
     private val columns = mutableListOf<Column>()
@@ -35,27 +38,35 @@ class MatrixView @JvmOverloads constructor(
     private val chars: List<Char> =
         (33..126).map { it.toChar() } + (0x30A0..0x30FF).map { it.toChar() }
 
-    // Speed multiplier to make columns fall 200% faster (3x overall
-    // while update frequency is slowed down)
-    private val speedMultiplier = 6f
-
     private var charHeight = 0f
 
-    private val updateRunnable = object : Runnable {
-        override fun run() {
-            updateColumns()
+    private var lastFrameTime = 0L
+    private var lastCharUpdate = 0L
+
+    private val frameCallback = object : Choreographer.FrameCallback {
+        override fun doFrame(frameTimeNanos: Long) {
+            val timeMs = frameTimeNanos / 1_000_000
+            if (lastFrameTime == 0L) {
+                lastFrameTime = timeMs
+                lastCharUpdate = timeMs
+            }
+            val delta = timeMs - lastFrameTime
+            updateColumns(delta)
             invalidate()
-            // Update characters half as often (every 100ms)
-            postDelayed(this, 100)
+            lastFrameTime = timeMs
+            Choreographer.getInstance().postFrameCallback(this)
         }
     }
 
-    init {
-        post(updateRunnable)
+    override fun onAttachedToWindow() {
+        super.onAttachedToWindow()
+        lastFrameTime = SystemClock.uptimeMillis()
+        lastCharUpdate = lastFrameTime
+        Choreographer.getInstance().postFrameCallback(frameCallback)
     }
 
     override fun onDetachedFromWindow() {
-        removeCallbacks(updateRunnable)
+        Choreographer.getInstance().removeFrameCallback(frameCallback)
         super.onDetachedFromWindow()
     }
 
@@ -69,20 +80,31 @@ class MatrixView @JvmOverloads constructor(
             val x = i * columnWidth + Random.nextFloat() * columnWidth * 0.3f
             val length = Random.nextInt(5, 20)
             val y = Random.nextFloat() * h - length * charHeight
-            val speed = (5 + Random.nextFloat() * 10) * speedMultiplier
-            columns.add(Column(x, y, speed, length))
+            val speed = Random.nextFloat(300f, 900f)
+            val charsArr = CharArray(length) { chars.random() }
+            columns.add(Column(x, y, speed, length, charsArr))
         }
     }
 
-    private fun updateColumns() {
+    private fun updateColumns(deltaMs: Long) {
         val viewHeight = height.toFloat()
+        val updateChars = SystemClock.uptimeMillis() - lastCharUpdate >= 100
         for (column in columns) {
-            column.y += column.speed
+            column.y += column.speed * deltaMs / 1000f
             if (column.y - column.length * charHeight > viewHeight) {
                 column.length = Random.nextInt(5, 20)
+                column.chars = CharArray(column.length) { chars.random() }
                 column.y = -column.length * charHeight
-                column.speed = (5 + Random.nextFloat() * 10) * speedMultiplier
+                column.speed = Random.nextFloat(300f, 900f)
             }
+            if (updateChars) {
+                for (i in column.chars.indices) {
+                    column.chars[i] = chars.random()
+                }
+            }
+        }
+        if (updateChars) {
+            lastCharUpdate = SystemClock.uptimeMillis()
         }
     }
 
@@ -93,7 +115,7 @@ class MatrixView @JvmOverloads constructor(
                 val yPos = column.y - i * charHeight
                 if (yPos < -charHeight || yPos > height + charHeight) continue
                 paint.alpha = Random.nextInt(50, 256)
-                val char = chars.random()
+                val char = column.chars[i]
                 canvas.drawText(char.toString(), column.x, yPos, paint)
             }
         }
