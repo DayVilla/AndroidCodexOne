@@ -17,7 +17,8 @@ class MatrixView @JvmOverloads constructor(
     private val paint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
         // Typical green color used for the Matrix effect
         color = Color.rgb(0, 255, 70)
-        textSize = 32f * resources.displayMetrics.density
+        // Scale text to 30% of the previous size (70% smaller)
+        textSize = 32f * resources.displayMetrics.density * 0.3f
         typeface = Typeface.MONOSPACE
     }
 
@@ -34,13 +35,18 @@ class MatrixView @JvmOverloads constructor(
     private val chars: List<Char> =
         (33..126).map { it.toChar() } + (0x30A0..0x30FF).map { it.toChar() }
 
+    // Speed multiplier to make columns fall 200% faster (3x overall
+    // while update frequency is slowed down)
+    private val speedMultiplier = 6f
+
     private var charHeight = 0f
 
     private val updateRunnable = object : Runnable {
         override fun run() {
             updateColumns()
             invalidate()
-            postDelayed(this, 50)
+            // Update characters half as often (every 100ms)
+            postDelayed(this, 100)
         }
     }
 
@@ -63,7 +69,7 @@ class MatrixView @JvmOverloads constructor(
             val x = i * columnWidth + Random.nextFloat() * columnWidth * 0.3f
             val length = Random.nextInt(5, 20)
             val y = Random.nextFloat() * h - length * charHeight
-            val speed = 5 + Random.nextFloat() * 10
+            val speed = (5 + Random.nextFloat() * 10) * speedMultiplier
             columns.add(Column(x, y, speed, length))
         }
     }
@@ -75,7 +81,7 @@ class MatrixView @JvmOverloads constructor(
             if (column.y - column.length * charHeight > viewHeight) {
                 column.length = Random.nextInt(5, 20)
                 column.y = -column.length * charHeight
-                column.speed = 5 + Random.nextFloat() * 10
+                column.speed = (5 + Random.nextFloat() * 10) * speedMultiplier
             }
         }
     }
