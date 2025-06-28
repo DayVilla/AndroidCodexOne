@@ -99,8 +99,16 @@ class MatrixView @JvmOverloads constructor(
 
         val centerX = w / 2f
         val centerY = h / 2f
-        val halfW = emojiBitmap.width / 2f
-        val halfH = emojiBitmap.height / 2f
+
+        val maxDimPx = 200f * resources.displayMetrics.density
+        val scale = kotlin.math.min(1f, kotlin.math.min(
+            maxDimPx / emojiBitmap.width.toFloat(),
+            maxDimPx / emojiBitmap.height.toFloat()
+        ))
+        val drawW = emojiBitmap.width * scale
+        val drawH = emojiBitmap.height * scale
+        val halfW = drawW / 2f
+        val halfH = drawH / 2f
         emojiRect.set(centerX - halfW, centerY - halfH, centerX + halfW, centerY + halfH)
     }
 
@@ -128,13 +136,26 @@ class MatrixView @JvmOverloads constructor(
 
     override fun onDraw(canvas: Canvas) {
         super.onDraw(canvas)
+        val centerX = emojiRect.centerX()
+        val repelRadius = emojiRect.width() / 2f * 1.2f
         for (column in columns) {
             for (i in 0 until column.length) {
                 val yPos = column.y - i * charHeight
                 if (yPos < -charHeight || yPos > height + charHeight) continue
                 paint.alpha = Random.nextInt(50, 256)
                 val char = column.chars[i]
-                canvas.drawText(char.toString(), column.x, yPos, paint)
+
+                var x = column.x
+                if (yPos >= emojiRect.top && yPos <= emojiRect.bottom) {
+                    val dx = column.x - centerX
+                    val dist = kotlin.math.abs(dx)
+                    if (dist < repelRadius) {
+                        val direction = if (dx >= 0) 1f else -1f
+                        val t = 1f - dist / repelRadius
+                        x += direction * repelRadius * t
+                    }
+                }
+                canvas.drawText(char.toString(), x, yPos, paint)
             }
         }
 
