@@ -80,7 +80,8 @@ class MatrixView @JvmOverloads constructor(
             val x = i * columnWidth + Random.nextFloat() * columnWidth * 0.3f
             val length = Random.nextInt(5, 20)
             val y = Random.nextFloat() * h - length * charHeight
-            val speed = Random.nextFloat(300f, 900f)
+            //val speed = Random.nextFloat(300f, 900f)
+            val speed = Random.nextFloat() * (900f - 300f) + 300f
             val charsArr = CharArray(length) { chars.random() }
             columns.add(Column(x, y, speed, length, charsArr))
         }
@@ -95,7 +96,7 @@ class MatrixView @JvmOverloads constructor(
                 column.length = Random.nextInt(5, 20)
                 column.chars = CharArray(column.length) { chars.random() }
                 column.y = -column.length * charHeight
-                column.speed = Random.nextFloat(300f, 900f)
+                column.speed = Random.nextFloat() * (900f - 300f) + 300f
             }
             if (updateChars) {
                 for (i in column.chars.indices) {
