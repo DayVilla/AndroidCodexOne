@@ -4,6 +4,9 @@ import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Color
 import android.graphics.Paint
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
+import android.graphics.RectF
 import android.graphics.Typeface
 import android.os.SystemClock
 import android.util.AttributeSet
@@ -23,6 +26,10 @@ class MatrixView @JvmOverloads constructor(
         textSize = 32f * resources.displayMetrics.density * 0.3f
         typeface = Typeface.MONOSPACE
     }
+
+    private val emojiBitmap: Bitmap =
+        BitmapFactory.decodeResource(resources, R.drawable.emojia)
+    private val emojiRect = RectF()
 
     private data class Column(
         var x: Float,
@@ -89,6 +96,12 @@ class MatrixView @JvmOverloads constructor(
             val charsArr = CharArray(length) { chars.random() }
             columns.add(Column(x, y, speed, length, charsArr))
         }
+
+        val centerX = w / 2f
+        val centerY = h / 2f
+        val halfW = emojiBitmap.width / 2f
+        val halfH = emojiBitmap.height / 2f
+        emojiRect.set(centerX - halfW, centerY - halfH, centerX + halfW, centerY + halfH)
     }
 
     private fun updateColumns(deltaMs: Long) {
@@ -124,5 +137,7 @@ class MatrixView @JvmOverloads constructor(
                 canvas.drawText(char.toString(), column.x, yPos, paint)
             }
         }
+
+        canvas.drawBitmap(emojiBitmap, null, emojiRect, null)
     }
 }
