@@ -38,6 +38,10 @@ class MatrixView @JvmOverloads constructor(
     private val chars: List<Char> =
         (33..126).map { it.toChar() } + (0x30A0..0x30FF).map { it.toChar() }
 
+    /** Length range for each falling line */
+    private val minLineLength = 10
+    private val maxLineLength = 40
+
     private var charHeight = 0f
 
     private var lastFrameTime = 0L
@@ -78,7 +82,7 @@ class MatrixView @JvmOverloads constructor(
         val count = (w / columnWidth).toInt()
         for (i in 0 until count) {
             val x = i * columnWidth + Random.nextFloat() * columnWidth * 0.3f
-            val length = Random.nextInt(5, 20)
+            val length = Random.nextInt(minLineLength, maxLineLength)
             val y = Random.nextFloat() * h - length * charHeight
             //val speed = Random.nextFloat(300f, 900f)
             val speed = Random.nextFloat() * (900f - 300f) + 300f
@@ -93,7 +97,7 @@ class MatrixView @JvmOverloads constructor(
         for (column in columns) {
             column.y += column.speed * deltaMs / 1000f
             if (column.y - column.length * charHeight > viewHeight) {
-                column.length = Random.nextInt(5, 20)
+                column.length = Random.nextInt(minLineLength, maxLineLength)
                 column.chars = CharArray(column.length) { chars.random() }
                 column.y = -column.length * charHeight
                 column.speed = Random.nextFloat() * (900f - 300f) + 300f
