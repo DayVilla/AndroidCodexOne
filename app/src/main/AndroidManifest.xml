@@ -22,6 +22,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".MatrixActivity" />
+        <activity android:name=".PicassoActivity" />
     </application>
 
 </manifest>

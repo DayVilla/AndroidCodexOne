@@ -1,4 +1,5 @@
 <resources>
     <string name="app_name">AndroidCodexOne</string>
     <string name="open_matrix">Open Matrix</string>
+    <string name="open_image">Open Image</string>
 </resources>

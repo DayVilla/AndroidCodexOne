@@ -22,5 +22,9 @@ class MainActivity : AppCompatActivity() {
         findViewById<Button>(R.id.btn_matrix).setOnClickListener {
             startActivity(Intent(this, MatrixActivity::class.java))
         }
+
+        findViewById<Button>(R.id.btn_picasso).setOnClickListener {
+            startActivity(Intent(this, PicassoActivity::class.java))
+        }
     }
 }
